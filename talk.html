@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="Slidy2/styles/slidy.css" />
+  <script src="mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+  <script src="Slidy2/scripts/slidy.js.gz"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div class="section slide level1" id="combatting-edge-effects-in-spatial-smoothing">
+<h1>Combatting edge effects in spatial smoothing</h1>
+<p>David L. Miller (joint work with Esther Jones and Jason Matthiopoulos)</p>
+<p>ISEC 2012, Oslo, Norway</p>
+</div>
+<div class="section slide level1" id="spatial-smoothing-with-splines">
+<h1>Spatial smoothing with splines</h1>
+<ul class="incremental">
+<li>Just talking about 2-D smoothing in a “box”</li>
+<li>No fancy complex regions</li>
+<li>This should be easy…</li>
+<li>BUT: still have edge effects
+<div class="incremental">
+<div align="center">
+<img src="figure/unnamed-chunk-2.png" /></li>
+</ul>
+</div>
+</div>
+
+</div>
+<div class="section slide level1" id="whats-going-on">
+<h1>What’s going on? </h1>
+<p>\[
+f(x,y) = {\color{red}\sum_{i=1}^n \delta_i \eta(r_i)} + \sum_{j=1}^3 \alpha_j \phi_j(x,y),
+\] where \(r_i=\sqrt{(x-x_i)^2+(y-y_i)^2}\)</p>
+<div align="center">
+<div class="figure">
+<img src="figure/unnamed-chunk-3.png" /><p class="caption"></p>
+</div>
+</div>
+
+
+</div>
+<div class="section slide level1" id="whats-going-on-1">
+<h1>What’s going on? </h1>
+<p>\[
+f(x,y) = \sum_{i=1}^n \delta_i \eta(r_i) + {\color{red}\sum_{j=1}^3 \alpha_j \phi_j(x,y)},
+\]</p>
+<div align="center">
+<div class="figure">
+<img src="figure/unnamed-chunk-4.png" /><p class="caption"></p>
+</div>
+</div>
+
+
+
+</div>
+<div class="section slide level1" id="can-we-get-around-this">
+<h1> Can we get around this?</h1>
+<ul class="incremental">
+<li>change to a local basis (e.g. P-splines)
+<ul class="incremental">
+<li>computationally expensive – tensor products</li>
+</ul></li>
+<li>treat this as a complex region (e.g. <code>soap</code>)
+<ul class="incremental">
+<li>wasteful, complex and not well motivated</li>
+</ul></li>
+<li>remove the offending parts of the spline
+<ul class="incremental">
+<li>\(f\) not guaranteed continuous</li>
+</ul></li>
+<li>introduce extra penalty for the linear parts
+<ul class="incremental">
+<li>numerically icky, complicated, not guaranteed to work</li>
+</ul></li>
+</ul>
+</div>
+<div class="section slide level1" id="section">
+<h1></h1>
+<div align="center">
+ 
+<img src="duchonpaper.png" />
+</div>
+
+
+</div>
+<div class="section slide level1" id="duchon-splines">
+<h1>Duchon splines</h1>
+<ul class="incremental">
+<li>same basis as thin plate splines</li>
+<li>modify penalty</li>
+<li>remove the linear terms</li>
+<li><em>but</em> keep it mathematically consistent</li>
+</ul>
+</div>
+<div class="section slide level1" id="mathematical-interlude">
+<h1> Mathematical interlude</h1>
+<p>Thin plate penalty (in 2D, with \(2^\text{nd}\) order derivative penalty): \[
+P_{2,2} = \int \int_{\mathbb{R}^2} \left (\frac{\partial^2 f(x,y)}{\partial x^2} \right )^2 + 2\left (\frac{\partial^2 f(x,y)}{\partial x \partial y} \right )^2 + \left (\frac{\partial^2 f(x,y)}{\partial y^2} \right )^2 \text{d}x \text{d}y
+\] More generally: \[
+P_{m,2} = \int \int_{\mathbb{R}^2} \sum_{\nu_1 + \nu_2=m} \frac{m!}{\nu_1! \nu_2!} \left( \frac{\partial^m f \left (x, y \right )}{\partial x^{\nu_1} \partial y^{\nu_2}} \right)^2 \text{d} x \text{d} y
+\] to ensure that \(f\) remains continuous, \(2m&gt;\) # dimensions (here 2).</p>
+<p>\(m\) also dictates # linearly independent polynomials</p>
+</div>
+<div class="section slide level1" id="mathematical-interlude-1">
+<h1> Mathematical interlude</h1>
+Take Fourier transform of derivatives: \[
+P_{m,2} = \int \int_{\mathbb{R}^2} \sum_{\nu_1 + \nu_2=m} \frac{m!}{\nu_1! \nu_2!} \left ( \mathfrak{F} \frac{\partial^m f}{\partial x^{\nu_1} \partial y^{\nu_2}} \left (  \boldsymbol{\tau}\right ) \right )^2 \text{d} \boldsymbol{\tau}.
+\]
+<div align="center">
+<div class="figure">
+<img src="figure/unnamed-chunk-5.png" /><p class="caption"></p>
+</div>
+</div>
+
+</div>
+<div class="section slide level1" id="mathematical-interlude-2">
+<h1> Mathematical interlude</h1>
+What about weighting on the frequencies? \[
+\int \int_{\mathbb{R}^2} w(\boldsymbol{\tau}) \sum_{\nu_1 + \nu_2=m} \frac{m!}{\nu_1! \nu_2!} \left ( \mathfrak{F} \frac{\partial^m f}{\partial x_1^{\nu_1} \partial y^{\nu_2}} \left (\boldsymbol{\tau} \right ) \right )^2 \text{d} \boldsymbol{\tau}
+\]
+<div align="center">
+<div class="figure">
+<img src="figure/unnamed-chunk-6.png" /><p class="caption"></p>
+</div>
+</div>
+
+
+</div>
+<div class="section slide level1" id="new-penalty">
+<h1>New penalty</h1>
+<ul class="incremental">
+<li>Letting \(w(\boldsymbol{\tau})=\lvert \boldsymbol{\tau} \rvert^{2s}\) \[
+\breve{P}_{m,2} = \int \int_{\mathbb{R}^2} \lvert \boldsymbol{\tau} \rvert^{2s} \sum_{\nu_1 + \nu_2=m} \frac{m!}{\nu_1! \nu_2!}\left ( \mathfrak{F} \frac{\partial^m f}{\partial x^{\nu_1} \partial y^{\nu_2}} \left (\boldsymbol{\tau} \right ) \right )^2 \text{d} \boldsymbol{\tau}
+\]</li>
+<li>We can now set \(s\) to “make up” for reducing \(m\) : \(m&gt;d/2-s\)</li>
+<li>\(s&gt;d/2-m \quad (s \in \mathbb{Z}/2) \quad \Rightarrow\) \(s=1/2\)</li>
+<li>\[
+\breve{P}_{1,2} = \int \int_{\mathbb{R}^2} \lvert \boldsymbol{\tau} \rvert \left\{ \left ( \mathfrak{F} \frac{\partial f}{\partial x} \left(\boldsymbol{\tau} \right) \right )^2 + \left (\mathfrak{F} \frac{\partial f}{\partial y}\left(\boldsymbol{\tau} \right) \right )^2 \right\} \text{d}\boldsymbol{\tau}.
+\]</li>
+</ul>
+</div>
+<div class="section slide level1" id="comparison-for-simulated-data">
+<h1>Comparison for simulated data</h1>
+<div align="center">
+<div class="figure">
+<img src="figure/unnamed-chunk-7.png" /><p class="caption"></p>
+</div>
+</div>
+
+
+</div>
+<div class="section slide level1" id="comparison-for-real-data">
+<h1>Comparison for real data</h1>
+</div>
+<div class="section slide level1" id="software">
+<h1>Software</h1>
+<ul class="incremental">
+<li>already implemented in <code>mgcv</code></li>
+<li><code>bs=&quot;ds&quot;</code>, then set <code>m=c(1,0.5)</code> and you’re good to go</li>
+<li>From the above: <br/> <code>b &lt;- gam(z~s(x, y, k=100), data=dat)</code></li>
+<li>becomes:<br/> <code>b &lt;- gam(z~s(x, y, bs=&quot;ds&quot;, m=c(1,0.5), k=100), data=dat)</code></li>
+<li>where <code>m=c(</code>\(m\)<code>,</code>\(s\)<code>)</code></li>
+</ul>
+</div>
+<div class="section slide level1" id="conclusion">
+<h1>Conclusion</h1>
+<ul class="incremental">
+<li>Edge effects can be nasty</li>
+<li>Duchon splines offer an easy solution</li>
+<li>Already implemented in <code>mgcv</code></li>
+<li>Simple change to code to see if they help</li>
+<li>Paper coming soon <em>Combatting edge effects in spatial models</em> Miller, Lane and Matthiopoulos.</li>
+<li>Download talk+code at <a href="http://github.com/dill/isec2012">http://github.com/dill/isec2012</a></li>
+</ul>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js", "TeX/boldsymbol.js", "TeX/color.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+      processEscapes: true
+    },
+    TeX: {
+        TagSide: "right",
+        TagIndent: ".8em",
+        MultLineWidth: "85%",
+        equationNumbers: {
+           autoNumber: "AMS",
+        },
+        unicode: {
+           fonts: "STIXGeneral,'Arial Unicode MS'" 
+        }
+    },
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+<meta name="duration" content="12" />
+</div>
+</body>
+</html>
